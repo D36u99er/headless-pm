@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 import uvicorn
 import os
 import asyncio
@@ -15,6 +16,7 @@ from src.api.service_routes import router as service_router
 from src.api.mention_routes import router as mention_router
 from src.api.changes_routes import router as changes_router
 from src.services.health_checker import health_checker
+from src.api.swagger_config import get_swagger_ui_html, get_redoc_html
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,8 +31,8 @@ app = FastAPI(
     title="Headless PM API",
     description="用于LLM代理协调的轻量级项目管理API",
     version="1.0.0",
-    docs_url="/api/v1/docs",
-    redoc_url="/api/v1/redoc",
+    docs_url=None,  # 禁用默认的 docs
+    redoc_url=None,  # 禁用默认的 redoc
     openapi_url="/api/v1/openapi.json",
     lifespan=lifespan
 )
@@ -51,6 +53,21 @@ app.include_router(service_router)
 app.include_router(mention_router)
 app.include_router(changes_router)
 
+# 自定义 Swagger UI 路由
+@app.get("/api/v1/docs", response_class=HTMLResponse, include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - API 文档"
+    )
+
+# 自定义 ReDoc 路由
+@app.get("/api/v1/redoc", response_class=HTMLResponse, include_in_schema=False)
+async def redoc_html():
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - API 文档"
+    )
 
 @app.get("/", tags=["根目录"])
 def read_root():

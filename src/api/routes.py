@@ -231,6 +231,6 @@ def delete_task_endpoint(task_id: int, agent_id: str, db: Session = Depends(get_
 # Changelog endpoint
 @router.get("/changelog", response_model=List[ChangelogResponse],
     summary="获取最近变更",
-    description="获取项目中最近的任务状态变更"
+    description="获取项目中最近的任务状态变更")
 def get_changelog(limit: int = 50, db: Session = Depends(get_session)):
     return get_recent_changelog(limit, db)

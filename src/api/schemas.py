@@ -9,35 +9,35 @@ if TYPE_CHECKING:
 
 # Request schemas
 class AgentRegisterRequest(BaseModel):
-    agent_id: str = Field(..., description="Unique agent identifier (e.g., 'frontend_dev_senior_001')")
-    role: AgentRole = Field(..., description="Agent's role in the project")
-    level: DifficultyLevel = Field(..., description="Agent's skill level")
-    connection_type: Optional[ConnectionType] = Field(ConnectionType.CLIENT, description="Connection type (MCP or Client)")
+    agent_id: str = Field(..., description="唯一代理标识符（例如：'frontend_dev_senior_001'）")
+    role: AgentRole = Field(..., description="代理在项目中的角色")
+    level: DifficultyLevel = Field(..., description="代理的技能级别")
+    connection_type: Optional[ConnectionType] = Field(ConnectionType.CLIENT, description="连接类型（MCP 或 Client）")
 
 class EpicCreateRequest(BaseModel):
-    name: str = Field(..., description="Epic name")
-    description: str = Field(..., description="Epic description")
+    name: str = Field(..., description="史诗名称")
+    description: str = Field(..., description="史诗描述")
 
 class FeatureCreateRequest(BaseModel):
-    epic_id: int = Field(..., description="ID of the epic this feature belongs to")
-    name: str = Field(..., description="Feature name")
-    description: str = Field(..., description="Feature description")
+    epic_id: int = Field(..., description="此功能所属史诗的ID")
+    name: str = Field(..., description="功能名称")
+    description: str = Field(..., description="功能描述")
 
 class TaskCreateRequest(BaseModel):
-    feature_id: int = Field(..., description="ID of the feature this task belongs to")
-    title: str = Field(..., description="Brief task title")
-    description: str = Field(..., description="Detailed task description")
-    target_role: AgentRole = Field(..., description="Role that should handle this task")
-    difficulty: DifficultyLevel = Field(..., description="Task difficulty level")
-    complexity: TaskComplexity = Field(TaskComplexity.MAJOR, description="Task complexity (minor = commit to main, major = requires PR)")
-    branch: str = Field(..., description="Git branch for this task")
+    feature_id: int = Field(..., description="此任务所属功能的ID")
+    title: str = Field(..., description="简要任务标题")
+    description: str = Field(..., description="详细任务描述")
+    target_role: AgentRole = Field(..., description="应该处理此任务的角色")
+    difficulty: DifficultyLevel = Field(..., description="任务难度级别")
+    complexity: TaskComplexity = Field(TaskComplexity.MAJOR, description="任务复杂度（次要 = 直接提交到主分支，主要 = 需要PR）")
+    branch: str = Field(..., description="此任务的Git分支")
 
 class TaskStatusUpdateRequest(BaseModel):
-    status: TaskStatus = Field(..., description="New status for the task")
-    notes: Optional[str] = Field(None, description="Optional notes about the status change")
+    status: TaskStatus = Field(..., description="任务的新状态")
+    notes: Optional[str] = Field(None, description="关于状态变更的可选备注")
 
 class TaskCommentRequest(BaseModel):
-    comment: str = Field(..., description="Comment to add to the task")
+    comment: str = Field(..., description="要添加到任务的评论")
 
 # Response schemas
 class AgentResponse(BaseModel):
@@ -89,11 +89,11 @@ class TaskStatusUpdateResponse(BaseModel):
     task: TaskResponse
     next_task: Optional[TaskResponse] = None
     workflow_status: str = Field(..., description="continue | waiting | no_tasks")
-    task_completed: Optional[int] = Field(None, description="ID of completed task")
-    auto_continue: bool = Field(True, description="Whether to automatically continue to next task")
-    continuation_prompt: str = Field("Continue with the next task without waiting for confirmation", 
-                                   description="Instruction for autonomous continuation")
-    session_momentum: str = Field("high", description="high | medium | low - indicates work pace")
+    task_completed: Optional[int] = Field(None, description="已完成任务的ID")
+    auto_continue: bool = Field(True, description="是否自动继续下一个任务")
+    continuation_prompt: str = Field("继续下一个任务而无需等待确认", 
+                                   description="自主继续的指令")
+    session_momentum: str = Field("high", description="high | medium | low - 表示工作节奏")
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -132,16 +132,16 @@ class ErrorResponse(BaseModel):
 
 # Document schemas
 class DocumentCreateRequest(BaseModel):
-    doc_type: DocumentType = Field(..., description="Type of document")
-    title: str = Field(..., description="Document title", max_length=200)
-    content: str = Field(..., description="Document content (Markdown supported)")
-    meta_data: Optional[Dict[str, Any]] = Field(None, description="Additional meta_data")
-    expires_at: Optional[datetime] = Field(None, description="Auto-cleanup expiration time")
+    doc_type: DocumentType = Field(..., description="文档类型")
+    title: str = Field(..., description="文档标题", max_length=200)
+    content: str = Field(..., description="文档内容（支持Markdown）")
+    meta_data: Optional[Dict[str, Any]] = Field(None, description="额外的元数据")
+    expires_at: Optional[datetime] = Field(None, description="自动清理过期时间")
 
 class DocumentUpdateRequest(BaseModel):
-    title: Optional[str] = Field(None, description="Updated title", max_length=200)
-    content: Optional[str] = Field(None, description="Updated content")
-    meta_data: Optional[Dict[str, Any]] = Field(None, description="Updated meta_data")
+    title: Optional[str] = Field(None, description="更新的标题", max_length=200)
+    content: Optional[str] = Field(None, description="更新的内容")
+    meta_data: Optional[Dict[str, Any]] = Field(None, description="更新的元数据")
 
 class DocumentResponse(BaseModel):
     id: int
@@ -159,11 +159,11 @@ class DocumentResponse(BaseModel):
 
 # Service schemas
 class ServiceRegisterRequest(BaseModel):
-    service_name: str = Field(..., description="Unique service name", max_length=100)
-    ping_url: str = Field(..., description="URL to ping for health check (e.g., http://localhost:8080/health)")
-    port: Optional[int] = Field(None, description="Port number if applicable")
-    status: ServiceStatus = Field("up", description="Service status")
-    meta_data: Optional[Dict[str, Any]] = Field(None, description="Additional service meta_data")
+    service_name: str = Field(..., description="唯一服务名称", max_length=100)
+    ping_url: str = Field(..., description="用于健康检查的ping URL（例如：http://localhost:8080/health）")
+    port: Optional[int] = Field(None, description="端口号（如适用）")
+    status: ServiceStatus = Field("up", description="服务状态")
+    meta_data: Optional[Dict[str, Any]] = Field(None, description="额外的服务元数据")
 
 class ServiceResponse(BaseModel):
     id: int
