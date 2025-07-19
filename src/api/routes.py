@@ -36,8 +36,8 @@ router = APIRouter(prefix="/api/v1", dependencies=[Depends(verify_api_key)])
 
 # Agent endpoints
 @router.post("/register", response_model=AgentRegistrationResponse, 
-    summary="Register an agent",
-    description="Register a new agent or update existing agent's last seen timestamp. Returns agent info, next available task, and any unread mentions.")
+    summary="注册代理",
+    description="注册新代理或更新现有代理的最后看到时间戳。返回代理信息、下一个可用任务和任何未读提及。")
 def register_agent(request: AgentRegisterRequest, db: Session = Depends(get_session)):
     # Register or update agent
     agent = register_or_update_agent(request, db)
@@ -63,23 +63,23 @@ def register_agent(request: AgentRegisterRequest, db: Session = Depends(get_sess
 
 
 @router.get("/agents", response_model=List[AgentResponse],
-    summary="List all agents", 
-    description="Get a list of all registered agents")
+    summary="列出所有代理", 
+    description="获取所有已注册代理的列表")
 def list_agents(db: Session = Depends(get_session)):
     return list_all_agents(db)
 
 
 @router.delete("/agents/{agent_id}",
-    summary="Delete an agent (PM only)",
-    description="Delete an agent record. Only PM agents can perform this action.")
+    summary="删除代理（仅PM）",
+    description="删除代理记录。只有PM代理可以执行此操作。")
 def delete_agent_endpoint(agent_id: str, requester_agent_id: str, db: Session = Depends(get_session)):
     return delete_agent(agent_id, requester_agent_id, db)
 
 
 # Project context endpoint
 @router.get("/context", response_model=ProjectContextResponse,
-    summary="Get project context",
-    description="Get project configuration and paths for documentation")
+    summary="获取项目上下文",
+    description="获取项目配置和文档路径")
 def get_context():
     return ProjectContextResponse(
         project_name=os.getenv("PROJECT_NAME", "Headless PM"),
@@ -92,59 +92,59 @@ def get_context():
 
 # Epic endpoints
 @router.post("/epics", response_model=EpicResponse,
-    summary="Create a new epic",
-    description="PMs and architects can create epics")
+    summary="创建新史诗",
+    description="PM和架构师可以创建史诗")
 def create_epic_endpoint(request: EpicCreateRequest, agent_id: str, db: Session = Depends(get_session)):
     return create_epic(request, agent_id, db)
 
 
 @router.get("/epics", response_model=List[EpicResponse],
-    summary="List all epics",
-    description="Get all epics with task progress information")
+    summary="列出所有史诗",
+    description="获取所有史诗及其任务进度信息")
 def list_epics_endpoint(db: Session = Depends(get_session)):
     return list_epics(db)
 
 
 @router.delete("/epics/{epic_id}",
-    summary="Delete an epic (PM only)",
-    description="Delete an epic and all its features and tasks. Only PM agents can perform this action.")
+    summary="删除史诗（仅PM）",
+    description="删除史诗及其所有功能和任务。只有PM代理可以执行此操作。")
 def delete_epic_endpoint(epic_id: int, agent_id: str, db: Session = Depends(get_session)):
     return delete_epic(epic_id, agent_id, db)
 
 
 # Feature endpoints
 @router.post("/features", response_model=FeatureResponse,
-    summary="Create a new feature",
-    description="PMs and architects can create features within epics")
+    summary="创建新功能",
+    description="PM和架构师可以在史诗中创建功能")
 def create_feature_endpoint(request: FeatureCreateRequest, agent_id: str, db: Session = Depends(get_session)):
     return create_feature(request, agent_id, db)
 
 
 @router.get("/features/{epic_id}", response_model=List[FeatureResponse],
-    summary="List features for an epic",
-    description="Get all features belonging to a specific epic")
+    summary="列出史诗的功能",
+    description="获取特定史诗的所有功能")
 def list_features_endpoint(epic_id: int, db: Session = Depends(get_session)):
     return list_features_for_epic(epic_id, db)
 
 
 @router.delete("/features/{feature_id}",
-    summary="Delete a feature (PM only)",
-    description="Delete a feature and all its tasks. Only PM agents can perform this action.")
+    summary="删除功能（仅PM）",
+    description="删除功能及其所有任务。只有PM代理可以执行此操作。")
 def delete_feature_endpoint(feature_id: int, agent_id: str, db: Session = Depends(get_session)):
     return delete_feature(feature_id, agent_id, db)
 
 
 # Task endpoints
 @router.post("/tasks/create", response_model=TaskResponse,
-    summary="Create a new task",
-    description="Any agent can create a task for any role")
+    summary="创建新任务",
+    description="任何代理都可以为任何角色创建任务")
 def create_task_endpoint(request: TaskCreateRequest, agent_id: str, db: Session = Depends(get_session)):
     return create_task(request, agent_id, db)
 
 
 @router.get("/tasks", response_model=List[TaskResponse],
-    summary="List all tasks",
-    description="Get all tasks with optional filtering by status and role")
+    summary="列出所有任务",
+    description="获取所有任务，可按状态和角色过滤")
 def list_tasks_endpoint(
     status: Optional[TaskStatus] = None,
     role: Optional[AgentRole] = None,
@@ -154,8 +154,8 @@ def list_tasks_endpoint(
 
 
 @router.get("/tasks/next", response_model=Optional[TaskResponse],
-    summary="Get next available task",
-    description="Get the next task based on agent's role and skill level. Waits up to 3 minutes if no tasks are available, returns null if none found. Both 'role' and 'level' query parameters are required. Use 'simulate=true' to skip waiting for testing. Use 'timeout' to override wait duration (in seconds).")
+    summary="获取下一个可用任务",
+    description="根据代理的角色和技能级别获取下一个任务。如果没有可用任务，最多等待3分钟，如果找不到则返回null。'role'和'level'查询参数都是必需的。使用'simulate=true'跳过等待以进行测试。使用'timeout'覆盖等待时间（以秒为单位）。")
 def get_next_task(role: AgentRole = None, level: DifficultyLevel = None, 
                   simulate: bool = False, timeout: Optional[int] = None,
                   db: Session = Depends(get_session)) -> Optional[TaskResponse]:
@@ -163,19 +163,19 @@ def get_next_task(role: AgentRole = None, level: DifficultyLevel = None,
     if role is None:
         raise HTTPException(
             status_code=400, 
-            detail="Missing required parameter 'role'. Please provide a valid role (e.g., ?role=frontend_dev)"
+            detail="缺少必需参数'role'。请提供有效的角色（例如：?role=frontend_dev）"
         )
     if level is None:
         raise HTTPException(
             status_code=400, 
-            detail="Missing required parameter 'level'. Please provide a valid level (e.g., ?level=senior)"
+            detail="缺少必需参数'level'。请提供有效的级别（例如：?level=senior）"
         )
     
-    # Close the current session as we'll use fresh sessions in the service
+    # 关闭当前会话，因为我们将在服务中使用新会话
     db.close()
     
     if simulate:
-        # For testing/simulation, just check once without waiting
+        # 用于测试/模拟，仅检查一次而不等待
         from src.services.task_service import get_next_task_for_agent
         from src.models.models import Agent
         from src.models.database import engine
@@ -192,45 +192,45 @@ def get_next_task(role: AgentRole = None, level: DifficultyLevel = None,
         with Session(engine) as fresh_db:
             return get_next_task_for_agent(temp_agent, fresh_db)
     else:
-        # Use the service function that handles waiting with fresh DB sessions
-        # Use provided timeout or default to 180 seconds (3 minutes)
+        # 使用处理等待和新数据库会话的服务函数
+        # 使用提供的超时或默认为180秒（3分钟）
         wait_timeout = timeout if timeout is not None else 180
         return wait_for_next_task(role, level, timeout_seconds=wait_timeout)
 
 
 @router.post("/tasks/{task_id}/lock", response_model=TaskResponse,
-    summary="Lock a task",
-    description="Lock a task to prevent other agents from working on it")
+    summary="锁定任务",
+    description="锁定任务以防止其他代理处理它")
 def lock_task_endpoint(task_id: int, agent_id: str, db: Session = Depends(get_session)):
     return lock_task(task_id, agent_id, db)
 
 
 @router.put("/tasks/{task_id}/status", response_model=TaskStatusUpdateResponse,
-    summary="Update task status",
-    description="Update task status, automatically release lock when moving from UNDER_WORK, and return next available task")
+    summary="更新任务状态",
+    description="更新任务状态，从UNDER_WORK状态移出时自动释放锁，并返回下一个可用任务")
 def update_task_status_endpoint(task_id: int, request: TaskStatusUpdateRequest, 
                                agent_id: str, db: Session = Depends(get_session)):
     return update_task_status(task_id, request, agent_id, db)
 
 
 @router.post("/tasks/{task_id}/comment",
-    summary="Add comment to task",
-    description="Add a comment during evaluation phase with @mention detection")
+    summary="添加任务评论",
+    description="在评估阶段添加评论，带@提及检测")
 def add_comment_endpoint(task_id: int, request: TaskCommentRequest,
                         agent_id: str, db: Session = Depends(get_session)):
     return add_task_comment(task_id, request, agent_id, db)
 
 
 @router.delete("/tasks/{task_id}",
-    summary="Delete a task (PM only)",
-    description="Delete a task. Only PM agents can perform this action.")
+    summary="删除任务（仅PM）",
+    description="删除任务。只有PM代理可以执行此操作。")
 def delete_task_endpoint(task_id: int, agent_id: str, db: Session = Depends(get_session)):
     return delete_task(task_id, agent_id, db)
 
 
 # Changelog endpoint
 @router.get("/changelog", response_model=List[ChangelogResponse],
-    summary="Get recent changes",
-    description="Get recent task status changes across the project")
+    summary="获取最近变更",
+    description="获取项目中最近的任务状态变更"
 def get_changelog(limit: int = 50, db: Session = Depends(get_session)):
     return get_recent_changelog(limit, db)

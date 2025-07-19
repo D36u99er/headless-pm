@@ -123,14 +123,14 @@ def verify_agent_role(agent_id: str, allowed_roles: List[AgentRole], db: Session
     if not agent:
         raise HTTPException(
             status_code=404, 
-            detail=f"Agent '{agent_id}' not found. Please ensure the agent is registered using POST /api/v1/register before attempting this operation."
+            detail=f"代理 '{agent_id}' 未找到。请确保在执行此操作前使用 POST /api/v1/register 注册代理。"
         )
     
     if agent.role not in allowed_roles:
         role_names = [role.value for role in allowed_roles]
         raise HTTPException(
             status_code=403, 
-            detail=f"Only {', '.join(role_names)} agents can perform this operation"
+            detail=f"只有 {', '.join(role_names)} 代理可以执行此操作"
         )
     
     return agent
@@ -156,13 +156,13 @@ def delete_agent(agent_id: str, requester_agent_id: str, db: Session) -> dict:
     
     # Prevent PM from deleting themselves
     if agent_id == requester_agent_id:
-        raise HTTPException(status_code=400, detail="Cannot delete your own agent record")
+        raise HTTPException(status_code=400, detail="不能删除您自己的代理记录")
     
     agent = db.exec(select(Agent).where(Agent.agent_id == agent_id)).first()
     if not agent:
-        raise HTTPException(status_code=404, detail="Agent not found")
+        raise HTTPException(status_code=404, detail="代理未找到")
     
     db.delete(agent)
     db.commit()
     
-    return {"message": f"Agent {agent_id} deleted successfully"}
+    return {"message": f"代理 {agent_id} 删除成功"}

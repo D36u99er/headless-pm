@@ -15,15 +15,15 @@ from src.models.models import Agent, Epic, Feature, Task, Service, Document
 from src.models.enums import TaskStatus, AgentRole, DifficultyLevel
 from src.models.document_enums import DocumentType, ServiceStatus
 
-app = typer.Typer(help="Headless PM - Project Management for LLM Agents")
+app = typer.Typer(help="Headless PM - LLM代理项目管理")
 
 def get_db() -> Session:
-    """Get database session"""
+    """获取数据库会话"""
     return next(get_session())
 
 @app.command()
 def status():
-    """Show project status overview"""
+    """显示项目状态概览"""
     db = get_db()
     
     # Count tasks by status
@@ -47,22 +47,22 @@ def status():
         )
     ).all())
     
-    typer.echo("🚀 Headless PM Status")
+    typer.echo("🚀 Headless PM 状态")
     typer.echo("=" * 50)
-    typer.echo(f"Registered Agents: {agent_count}")
-    typer.echo(f"Active Services: {active_services}")
-    typer.echo(f"Documents Today: {recent_docs}")
-    typer.echo("\nTask Breakdown:")
+    typer.echo(f"已注册代理: {agent_count}")
+    typer.echo(f"活跃服务: {active_services}")
+    typer.echo(f"今日文档: {recent_docs}")
+    typer.echo("\n任务分类:")
     
     for status, count in task_counts.items():
         typer.echo(f"  {status.replace('_', ' ').title()}: {count}")
 
 @app.command()
 def tasks(
-    status: Optional[str] = typer.Option(None, help="Filter by task status"),
-    role: Optional[str] = typer.Option(None, help="Filter by target role")
+    status: Optional[str] = typer.Option(None, help="按任务状态过滤"),
+    role: Optional[str] = typer.Option(None, help="按目标角色过滤")
 ):
-    """Show task assignments"""
+    """显示任务分配"""
     db = get_db()
     
     query = select(Task).order_by(Task.created_at.desc())
@@ -72,7 +72,7 @@ def tasks(
             task_status = TaskStatus(status)
             query = query.where(Task.status == task_status)
         except ValueError:
-            typer.echo(f"Invalid status: {status}")
+            typer.echo(f"无效状态: {status}")
             return
     
     if role:
@@ -80,13 +80,13 @@ def tasks(
             agent_role = AgentRole(role)
             query = query.where(Task.target_role == agent_role)
         except ValueError:
-            typer.echo(f"Invalid role: {role}")
+            typer.echo(f"无效角色: {role}")
             return
     
     tasks = db.exec(query.limit(20)).all()
     
     if not tasks:
-        typer.echo("No tasks found matching criteria")
+        typer.echo("未找到符合条件的任务")
         return
     
     # Prepare table data
@@ -102,15 +102,15 @@ def tasks(
             task.locked_by_agent.agent_id if task.locked_by_agent else "-"
         ])
     
-    headers = ["ID", "Title", "Role", "Level", "Status", "Creator", "Locked By"]
+    headers = ["ID", "标题", "角色", "级别", "状态", "创建者", "锁定者"]
     typer.echo(tabulate(table_data, headers=headers, tablefmt="grid"))
 
 @app.command()
 def reset():
-    """Reset database (WARNING: Deletes all data)"""
-    confirm = typer.confirm("This will delete ALL data. Are you sure?")
+    """重置数据库（警告：删除所有数据）"""
+    confirm = typer.confirm("这将删除所有数据。您确定吗？")
     if not confirm:
-        typer.echo("Operation cancelled")
+        typer.echo("操作已取消")
         return
     
     db = get_db()
@@ -121,17 +121,17 @@ def reset():
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
     
-    typer.echo("✅ Database reset successfully")
+    typer.echo("✅ 数据库重置成功")
 
 @app.command()
 def agents():
-    """List registered agents"""
+    """列出已注册的代理"""
     db = get_db()
     
     agents = db.exec(select(Agent).order_by(Agent.last_seen.desc())).all()
     
     if not agents:
-        typer.echo("No agents registered")
+        typer.echo("没有已注册的代理")
         return
     
     table_data = []
@@ -144,18 +144,18 @@ def agents():
             last_seen
         ])
     
-    headers = ["Agent ID", "Role", "Level", "Last Seen"]
+    headers = ["代理ID", "角色", "级别", "最后见到"]
     typer.echo(tabulate(table_data, headers=headers, tablefmt="grid"))
 
 @app.command()
 def services():
-    """List registered services"""
+    """列出已注册的服务"""
     db = get_db()
     
     services = db.exec(select(Service).order_by(Service.service_name)).all()
     
     if not services:
-        typer.echo("No services registered")
+        typer.echo("没有已注册的服务")
         return
     
     table_data = []
@@ -171,14 +171,14 @@ def services():
             last_heartbeat
         ])
     
-    headers = ["Service", "Owner", "Port", "Status", "Last Heartbeat"]
+    headers = ["服务", "所有者", "端口", "状态", "最后心跳"]
     typer.echo(tabulate(table_data, headers=headers, tablefmt="grid"))
 
 @app.command()
 def documents(
-    doc_type: Optional[str] = typer.Option(None, help="Filter by document type")
+    doc_type: Optional[str] = typer.Option(None, help="按文档类型过滤")
 ):
-    """List recent documents"""
+    """列出最近的文档"""
     db = get_db()
     
     query = select(Document).order_by(Document.created_at.desc())
@@ -188,13 +188,13 @@ def documents(
             document_type = DocumentType(doc_type)
             query = query.where(Document.doc_type == document_type)
         except ValueError:
-            typer.echo(f"Invalid document type: {doc_type}")
+            typer.echo(f"无效的文档类型: {doc_type}")
             return
     
     docs = db.exec(query.limit(20)).all()
     
     if not docs:
-        typer.echo("No documents found")
+        typer.echo("未找到文档")
         return
     
     table_data = []
@@ -210,20 +210,20 @@ def documents(
             created
         ])
     
-    headers = ["ID", "Type", "Title", "Author", "Created"]
+    headers = ["ID", "类型", "标题", "作者", "创建时间"]
     typer.echo(tabulate(table_data, headers=headers, tablefmt="grid"))
 
 @app.command()
 def seed():
-    """Create sample data for testing"""
+    """创建测试用的示例数据"""
     db = get_db()
     
-    typer.echo("Creating sample data...")
+    typer.echo("正在创建示例数据...")
     
-    # Create sample epic and feature
+    # 创建示例史诗和功能
     epic = Epic(
-        name="User Authentication",
-        description="Implement complete user authentication system"
+        name="用户认证",
+        description="实现完整的用户认证系统"
     )
     db.add(epic)
     db.commit()
@@ -231,14 +231,14 @@ def seed():
     
     feature = Feature(
         epic_id=epic.id,
-        name="Login System",
-        description="User login with JWT authentication"
+        name="登录系统",
+        description="使用JWT认证的用户登录"
     )
     db.add(feature)
     db.commit()
     db.refresh(feature)
     
-    # Create sample agents
+    # 创建示例代理
     agents = [
         Agent(
             agent_id="architect_principal_001",
@@ -266,14 +266,14 @@ def seed():
         db.add(agent)
     db.commit()
     
-    # Create sample tasks
+    # 创建示例任务
     architect = agents[0]
     
     tasks = [
         Task(
             feature_id=feature.id,
-            title="Design login UI mockups",
-            description="Create wireframes and mockups for login interface",
+            title="设计登录UI原型",
+            description="创建登录界面的线框图和原型",
             created_by_id=architect.id,
             target_role=AgentRole.FRONTEND_DEV,
             difficulty=DifficultyLevel.SENIOR,
@@ -281,8 +281,8 @@ def seed():
         ),
         Task(
             feature_id=feature.id,
-            title="Implement JWT authentication API",
-            description="Create login/logout endpoints with JWT tokens",
+            title="实现JWT认证API",
+            description="创建使用JWT令牌的登录/登出端点",
             created_by_id=architect.id,
             target_role=AgentRole.BACKEND_DEV,
             difficulty=DifficultyLevel.SENIOR,
@@ -290,8 +290,8 @@ def seed():
         ),
         Task(
             feature_id=feature.id,
-            title="Write authentication tests",
-            description="Create comprehensive test suite for auth system",
+            title="编写认证测试",
+            description="为认证系统创建全面的测试套件",
             created_by_id=architect.id,
             target_role=AgentRole.QA,
             difficulty=DifficultyLevel.SENIOR,
@@ -303,19 +303,19 @@ def seed():
         db.add(task)
     db.commit()
     
-    # Create sample documents
+    # 创建示例文档
     docs = [
         Document(
             doc_type=DocumentType.STANDUP,
             author_id="architect_principal_001",
-            title="Daily Standup - Architecture",
-            content="## Yesterday\n- Reviewed authentication requirements\n- Created initial task breakdown\n\n## Today\n- Finalizing API design\n- Creating detailed tasks\n\n## Blockers\n- None"
+            title="每日站会 - 架构",
+            content="## 昨天\n- 审查了认证需求\n- 创建了初始任务分解\n\n## 今天\n- 最终确定API设计\n- 创建详细任务\n\n## 阻碍\n- 无"
         ),
         Document(
             doc_type=DocumentType.CRITICAL_ISSUE,
             author_id="qa_senior_001",
-            title="Test Environment Down",
-            content="The test environment is currently down. @backend_dev_senior_001 please investigate."
+            title="测试环境故障",
+            content="测试环境当前已停机。@backend_dev_senior_001 请调查。"
         )
     ]
     
@@ -323,18 +323,18 @@ def seed():
         db.add(doc)
     db.commit()
     
-    typer.echo("✅ Sample data created successfully!")
-    typer.echo(f"Created: 1 epic, 1 feature, {len(tasks)} tasks, {len(agents)} agents, {len(docs)} documents")
+    typer.echo("✅ 示例数据创建成功！")
+    typer.echo(f"已创建：1个史诗，1个功能，{len(tasks)}个任务，{len(agents)}个代理，{len(docs)}个文档")
 
 @app.command()
 def init():
-    """Initialize database and create tables"""
+    """初始化数据库并创建表"""
     create_db_and_tables()
-    typer.echo("✅ Database initialized successfully")
+    typer.echo("✅ 数据库初始化成功")
 
 @app.command()
 def dashboard():
-    """Launch real-time dashboard"""
+    """启动实时仪表板"""
     from src.cli.dashboard import HeadlessPMDashboard
     dashboard = HeadlessPMDashboard()
     dashboard.run()

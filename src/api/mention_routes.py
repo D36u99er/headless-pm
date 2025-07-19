@@ -10,8 +10,8 @@ from src.api.dependencies import verify_api_key
 router = APIRouter(prefix="/api/v1/mentions", tags=["Mentions"], dependencies=[Depends(verify_api_key)])
 
 @router.get("", response_model=List[MentionResponse],
-    summary="Get mentions",
-    description="Get mentions for a specific agent or all agents if agent_id is not provided")
+    summary="获取提及",
+    description="获取特定代理的提及，或未提供agent_id时获取所有代理的提及")
 def get_mentions(
     agent_id: Optional[str] = Query(None, description="Agent ID to get mentions for (optional - returns all mentions if not provided)"),
     unread_only: bool = Query(False, description="Only show unread mentions (default: False - shows all mentions)"),
@@ -60,8 +60,8 @@ def get_mentions(
     return responses
 
 @router.get("/by-role", response_model=List[MentionResponse],
-    summary="Get mentions by role",
-    description="Get mentions for all agents of a specific role, or all mentions if no role specified")
+    summary="按角色获取提及",
+    description="获取特定角色的所有代理的提及，或未指定角色时获取所有提及")
 def get_mentions_by_role(
     role: Optional[str] = Query(None, description="Role to get mentions for (e.g., 'backend_dev', 'qa', etc.). If not provided, returns all mentions."),
     unread_only: bool = Query(False, description="Only show unread mentions (default: False - shows all mentions)"),
@@ -119,8 +119,8 @@ def get_mentions_by_role(
     return responses
 
 @router.put("/{mention_id}/read", response_model=MentionResponse,
-    summary="Mark mention as read",
-    description="Mark a specific mention as read")
+    summary="标记提及为已读",
+    description="将特定提及标记为已读")
 def mark_mention_read(
     mention_id: int,
     agent_id: str = Query(..., description="Agent ID marking the mention as read"),
@@ -128,11 +128,11 @@ def mark_mention_read(
 ):
     mention = db.get(Mention, mention_id)
     if not mention:
-        raise HTTPException(status_code=404, detail="Mention not found")
+        raise HTTPException(status_code=404, detail="提及未找到")
     
     # Verify the mention is for this agent
     if mention.mentioned_agent_id != agent_id:
-        raise HTTPException(status_code=403, detail="Cannot mark mentions for other agents as read")
+        raise HTTPException(status_code=403, detail="不能将其他代理的提及标记为已读")
     
     mention.is_read = True
     db.add(mention)

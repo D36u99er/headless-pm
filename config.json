@@ -1,23 +1,23 @@
 {
   "git": {
     "main_branch": "main",
-    "commit_directly_to_main": ["minor_fix", "documentation", "config_update"],
-    "require_pr_for": ["major_feature", "breaking_change", "refactor"]
+    "commit_directly_to_main": ["次要修复", "文档", "配置更新"],
+    "require_pr_for": ["主要功能", "破坏性变更", "重构"]
   },
   "task_classification": {
     "minor": {
-      "keywords": ["fix", "update", "adjust", "correct", "patch"],
+      "keywords": ["修复", "更新", "调整", "纠正", "补丁"],
       "max_story_points": 3,
       "commit_to_main": true
     },
     "major": {
-      "keywords": ["implement", "create", "build", "develop", "add"],
+      "keywords": ["实现", "创建", "构建", "开发", "添加"],
       "min_story_points": 5,
       "require_pr": true
     }
   },
   "pr_settings": {
-    "auto_assign_reviewers": ["architect", "pm"],
+    "auto_assign_reviewers": ["架构师", "项目经理"],
     "require_tests": true,
     "require_documentation": true
   }

@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Headless PM API",
-    description="A lightweight project management API for LLM agent coordination",
+    description="用于LLM代理协调的轻量级项目管理API",
     version="1.0.0",
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
@@ -52,17 +52,17 @@ app.include_router(mention_router)
 app.include_router(changes_router)
 
 
-@app.get("/", tags=["Root"])
+@app.get("/", tags=["根目录"])
 def read_root():
     return {
         "message": "Headless PM API",
         "docs": "/api/v1/docs",
-        "health": "ok"
+        "health": "正常"
     }
 
-@app.get("/health", tags=["Health"])
+@app.get("/health", tags=["健康检查"])
 def health_check():
-    """Enhanced health check endpoint with database status"""
+    """增强的健康检查端点，包含数据库状态"""
     from src.models.database import get_session
     from sqlmodel import select
     from src.models.models import Agent
@@ -73,21 +73,21 @@ def health_check():
         db = next(get_session())
         db.exec(select(Agent).limit(1))
         db.close()
-        db_status = "healthy"
+        db_status = "健康"
     except Exception as e:
-        db_status = f"unhealthy: {str(e)}"
+        db_status = f"不健康: {str(e)}"
     
     return {
-        "status": "healthy" if db_status == "healthy" else "degraded",
+        "status": "健康" if db_status == "健康" else "降级",
         "service": "headless-pm-api",
         "version": "1.0.0",
         "database": db_status,
         "timestamp": datetime.utcnow().isoformat()
     }
 
-@app.get("/status", tags=["Health"])
+@app.get("/status", tags=["健康检查"])
 def status_check():
-    """Detailed status endpoint with system metrics"""
+    """详细状态端点，包含系统指标"""
     from src.models.database import get_session
     from sqlmodel import select, func
     from src.models.models import Agent, Task, Document, Service
@@ -96,13 +96,13 @@ def status_check():
     try:
         db = next(get_session())
         
-        # Get counts
+        # 获取计数
         agent_count = db.exec(select(func.count(Agent.id))).first()
         task_count = db.exec(select(func.count(Task.id))).first()
         document_count = db.exec(select(func.count(Document.id))).first()
         service_count = db.exec(select(func.count(Service.id))).first()
         
-        # Get active agents (seen in last 5 minutes)
+        # 获取活跃代理（最近5分钟内看到）
         five_minutes_ago = datetime.utcnow().replace(microsecond=0) - timedelta(minutes=5)
         active_agents = db.exec(
             select(func.count(Agent.id)).where(Agent.last_seen > five_minutes_ago)

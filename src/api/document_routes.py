@@ -15,8 +15,8 @@ from src.services.mention_service import create_mentions_for_document
 router = APIRouter(prefix="/api/v1/documents", tags=["Documents"], dependencies=[Depends(verify_api_key)])
 
 @router.post("", response_model=DocumentResponse,
-    summary="Create a document",
-    description="Create a new document with automatic @mention detection")
+    summary="创建文档",
+    description="创建新文档，自动检测@提及")
 def create_document(
     request: DocumentCreateRequest,
     author_id: str = Query(..., description="Agent ID of the author"),
@@ -27,7 +27,7 @@ def create_document(
         if len(request.content) > 50000:  # 50KB limit
             raise HTTPException(
                 status_code=400,
-                detail="Document content exceeds maximum length of 50,000 characters"
+                detail="文档内容超过最大长度50,000字符"
             )
         
         # Ensure content is valid UTF-8
@@ -36,7 +36,7 @@ def create_document(
         except UnicodeEncodeError:
             raise HTTPException(
                 status_code=400,
-                detail="Document content contains invalid characters. Please ensure all text is valid UTF-8."
+                detail="文档内容包含无效字符。请确保所有文本都是有效的UTF-8。"
             )
         
         # Create document
@@ -58,11 +58,11 @@ def create_document(
         db.rollback()
         # Log the error for debugging
         import traceback
-        error_detail = f"Failed to create document: {str(e)}"
+        error_detail = f"创建文档失败: {str(e)}"
         traceback_str = traceback.format_exc()
         raise HTTPException(
             status_code=500,
-            detail=f"{error_detail}. Please check if your content contains valid UTF-8 characters and try again."
+            detail=f"{error_detail}。请检查您的内容是否包含有效的UTF-8字符并重试。"
         )
     
     # Extract and create mentions
@@ -88,8 +88,8 @@ def create_document(
     )
 
 @router.get("", response_model=List[DocumentResponse],
-    summary="List documents",
-    description="List documents by type, with optional filtering")
+    summary="列出文档",
+    description="按类型列出文档，支持可选过滤")
 def list_documents(
     doc_type: Optional[DocumentType] = Query(None, description="Filter by document type"),
     author_id: Optional[str] = Query(None, description="Filter by author"),
@@ -132,12 +132,12 @@ def list_documents(
     return responses
 
 @router.get("/{document_id}", response_model=DocumentResponse,
-    summary="Get document",
-    description="Get a specific document by ID")
+    summary="获取文档",
+    description="按ID获取特定文档")
 def get_document(document_id: int, db: Session = Depends(get_session)):
     document = db.get(Document, document_id)
     if not document:
-        raise HTTPException(status_code=404, detail=f"Document with ID {document_id} not found. Please verify the document ID exists.")
+        raise HTTPException(status_code=404, detail=f"ID为 {document_id} 的文档未找到。请验证文档ID是否存在。")
     
     # Get mentions
     mentions = db.exec(
@@ -159,8 +159,8 @@ def get_document(document_id: int, db: Session = Depends(get_session)):
     )
 
 @router.put("/{document_id}", response_model=DocumentResponse,
-    summary="Update document",
-    description="Update an existing document")
+    summary="更新文档",
+    description="更新现有文档")
 def update_document(
     document_id: int,
     request: DocumentUpdateRequest,
@@ -168,7 +168,7 @@ def update_document(
 ):
     document = db.get(Document, document_id)
     if not document:
-        raise HTTPException(status_code=404, detail=f"Document with ID {document_id} not found. Please verify the document ID exists.")
+        raise HTTPException(status_code=404, detail=f"ID为 {document_id} 的文档未找到。请验证文档ID是否存在。")
     
     # Update fields if provided
     if request.title is not None:
@@ -214,12 +214,12 @@ def update_document(
     )
 
 @router.delete("/{document_id}",
-    summary="Delete document",
-    description="Delete a document and its mentions")
+    summary="删除文档",
+    description="删除文档及其提及")
 def delete_document(document_id: int, db: Session = Depends(get_session)):
     document = db.get(Document, document_id)
     if not document:
-        raise HTTPException(status_code=404, detail=f"Document with ID {document_id} not found. Please verify the document ID exists.")
+        raise HTTPException(status_code=404, detail=f"ID为 {document_id} 的文档未找到。请验证文档ID是否存在。")
     
     # Delete mentions first
     for mention in document.mentions:
@@ -229,4 +229,4 @@ def delete_document(document_id: int, db: Session = Depends(get_session)):
     db.delete(document)
     db.commit()
     
-    return {"message": "Document deleted successfully"}
+    return {"message": "文档删除成功"}

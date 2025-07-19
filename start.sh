@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Headless PM Start Script
-# Checks environment, database, and starts the API server
+# Headless PM 启动脚本
+# 检查环境、数据库并启动API服务器
 
 set -e  # Exit on any error
 
@@ -31,13 +31,13 @@ log_error() {
 
 # Banner
 echo -e "${BLUE}"
-echo "🚀 Headless PM Startup Script"
+echo "🚀 Headless PM 启动脚本"
 echo "==============================="
 echo -e "${NC}"
 
 # Detect architecture and suggest appropriate venv
 ARCH=$(uname -m)
-log_info "Detected architecture: $ARCH"
+log_info "检测到架构: $ARCH"
 
 if [[ "$ARCH" == "arm64" ]]; then
     EXPECTED_VENV="venv"
@@ -47,34 +47,34 @@ fi
 
 # Check if .env file exists
 if [ ! -f ".env" ]; then
-    log_error ".env file not found!"
-    log_info "Copying env-example to .env..."
+    log_error "未找到 .env 文件！"
+    log_info "正在从 env-example 复制到 .env..."
     if [ -f "env-example" ]; then
         cp env-example .env
-        log_success ".env file created from env-example"
-        log_warning "Please edit .env file with your configuration before continuing"
+        log_success "已从 env-example 创建 .env 文件"
+        log_warning "请在继续之前编辑 .env 文件以配置您的设置"
         exit 1
     else
-        log_error "env-example file not found! Cannot create .env"
+        log_error "未找到 env-example 文件！无法创建 .env"
         exit 1
     fi
 fi
 
-log_success ".env file found"
+log_success "找到 .env 文件"
 
 # Check if we're in a virtual environment
 if [ -n "$VIRTUAL_ENV" ]; then
-    log_success "Virtual environment active: $VIRTUAL_ENV"
+    log_success "虚拟环境已激活: $VIRTUAL_ENV"
     # Check if it's the expected venv for this architecture
     if [[ ! "$VIRTUAL_ENV" == *"$EXPECTED_VENV"* ]]; then
-        log_warning "You're using a different venv than recommended for $ARCH architecture"
-        log_info "Recommended: $EXPECTED_VENV (run ./setup/universal_setup.sh to set up)"
+        log_warning "您使用的虚拟环境与 $ARCH 架构推荐的不同"
+        log_info "推荐使用: $EXPECTED_VENV (运行 ./setup/universal_setup.sh 进行设置)"
     fi
 else
-    log_warning "No virtual environment detected!"
-    log_info "Please activate the virtual environment:"
+    log_warning "未检测到虚拟环境！"
+    log_info "请激活虚拟环境:"
     echo "  source $EXPECTED_VENV/bin/activate"
-    log_info "Or run ./setup/universal_setup.sh to set up the environment"
+    log_info "或运行 ./setup/universal_setup.sh 设置环境"
 fi
 
 # Check Python version
@@ -83,23 +83,23 @@ PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d'.' -f1)
 PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d'.' -f2)
 
 if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 11 ]); then
-    log_error "Python 3.11+ required. Found: $PYTHON_VERSION"
+    log_error "需要 Python 3.11+。当前版本: $PYTHON_VERSION"
     exit 1
 fi
 
-log_success "Python version: $PYTHON_VERSION"
+log_success "Python 版本: $PYTHON_VERSION"
 
 # Check if required packages are installed
-log_info "Checking required packages..."
+log_info "检查必需的包..."
 if ! python -c "import fastapi, sqlmodel, uvicorn" 2>/dev/null; then
-    log_error "Required packages not found or have compatibility issues!"
-    log_info "This often happens with architecture mismatches (ARM64 vs x86_64)"
-    log_info "Recommended solution:"
-    echo "  Run: ./setup/universal_setup.sh"
-    echo "  This will create the correct environment for your architecture ($ARCH)"
+    log_error "未找到必需的包或存在兼容性问题！"
+    log_info "这通常发生在架构不匹配时 (ARM64 vs x86_64)"
+    log_info "推荐解决方案:"
+    echo "  运行: ./setup/universal_setup.sh"
+    echo "  这将为您的架构 ($ARCH) 创建正确的环境"
     exit 1
 else
-    log_success "Required packages found"
+    log_success "找到必需的包"
 fi
 
 # Load environment variables from .env file
@@ -108,82 +108,82 @@ if [ -f ".env" ]; then
     set -a
     source .env
     set +a
-    log_success "Environment variables loaded from .env"
+    log_success "已从 .env 加载环境变量"
 else
-    log_warning "No .env file found, using defaults"
+    log_warning "未找到 .env 文件，使用默认值"
 fi
 
 # Check database configuration
 DB_CONNECTION=${DB_CONNECTION:-"sqlite"}
-log_info "Database type: $DB_CONNECTION"
+log_info "数据库类型: $DB_CONNECTION"
 
 # Test database connection
-log_info "Testing database connection..."
+log_info "测试数据库连接..."
 DB_TEST_OUTPUT=$(python -c "
-print('Starting database test...')
+print('开始数据库测试...')
 from src.models.database import engine
-print('Engine imported successfully')
+print('引擎导入成功')
 try:
-    print('Attempting connection...')
+    print('尝试连接...')
     with engine.connect() as conn:
-        print('Connection established')
+        print('连接已建立')
         pass
-    print('SUCCESS')
+    print('成功')
 except Exception as e:
-    print(f'FAILED: {e}')
+    print(f'失败: {e}')
 " 2>&1)
 
-log_info "Database test output: $DB_TEST_OUTPUT"
+log_info "数据库测试输出: $DB_TEST_OUTPUT"
 
 if [[ "$DB_TEST_OUTPUT" == *"SUCCESS"* ]]; then
-    log_success "Database connection successful"
+    log_success "数据库连接成功"
 elif [[ "$DB_TEST_OUTPUT" == *"FAILED"* ]]; then
-    log_warning "Database connection failed. Initializing database..."
+    log_warning "数据库连接失败。正在初始化数据库..."
     python -m src.cli.main init
-    log_success "Database initialized"
+    log_success "数据库已初始化"
 else
-    log_error "Database test failed with unexpected output"
-    log_info "Output was: $DB_TEST_OUTPUT"
+    log_error "数据库测试失败，出现意外输出"
+    log_info "输出内容: $DB_TEST_OUTPUT"
     exit 1
 fi
 
 # Check if database has tables
-log_info "Checking database schema..."
+log_info "检查数据库模式..."
 SCHEMA_OUTPUT=$(python -c "
-print('Starting schema check...')
+print('开始模式检查...')
 from src.models.database import engine
 from sqlalchemy import text
-print('Schema imports successful')
+print('模式导入成功')
 try:
-    print('Connecting to database for schema check...')
+    print('连接数据库进行模式检查...')
     with engine.connect() as conn:
-        print('Schema connection established')
+        print('模式连接已建立')
         if '$DB_CONNECTION' == 'sqlite':
             result = conn.execute(text(\"SELECT name FROM sqlite_master WHERE type='table'\"))
         else:
             result = conn.execute(text(\"SHOW TABLES\"))
         tables = result.fetchall()
-        print(f'Found {len(tables)} tables')
+        print(f'找到 {len(tables)} 个表')
         if len(tables) < 5:  # Expecting at least 5 core tables
-            print('INCOMPLETE')
+            print('不完整')
         else:
-            print('VALID')
+            print('有效')
 except Exception as e:
-    print(f'ERROR: {e}')
+    print(f'错误: {e}')
 " 2>&1)
 
-log_info "Schema check output: $SCHEMA_OUTPUT"
+log_info "模式检查输出: $SCHEMA_OUTPUT"
 
 if [[ "$SCHEMA_OUTPUT" == *"VALID"* ]]; then
-    log_success "Database schema valid"
+    log_success "数据库模式有效"
 elif [[ "$SCHEMA_OUTPUT" == *"INCOMPLETE"* ]]; then
-    log_warning "Database schema incomplete. Reinitializing..."
+    log_warning "数据库模式不完整。正在重新初始化..."
     echo "y" | python -m src.cli.main reset 2>/dev/null || true
     python -m src.cli.main init
-    log_success "Database reinitialized"
+    log_success "数据库已重新初始化"
 else
-    log_error "Schema check failed"
-    log_info "Output was: $SCHEMA_OUTPUT"
+    log_error "模式检查失败"
+    log_info "输出内容: $SCHEMA_OUTPUT"
     exit 1
 fi
 
@@ -192,51 +192,51 @@ PORT=${SERVICE_PORT:-6969}
 
 # Only check port if service will be started
 if [ ! -z "$SERVICE_PORT" ] || [ "$PORT" = "6969" ]; then
-    log_info "Checking if port $PORT is available..."
+    log_info "检查端口 $PORT 是否可用..."
     if lsof -i :$PORT >/dev/null 2>&1; then
-        log_warning "Port $PORT is already in use"
-        log_info "You may want to stop the existing service or use a different port"
+        log_warning "端口 $PORT 已被占用"
+        log_info "您可能需要停止现有服务或使用其他端口"
     else
-        log_success "Port $PORT is available"
+        log_success "端口 $PORT 可用"
     fi
 fi
 
 # Only check MCP port if defined
 if [ ! -z "$MCP_PORT" ]; then
-    log_info "Checking if MCP port $MCP_PORT is available..."
+    log_info "检查 MCP 端口 $MCP_PORT 是否可用..."
     if lsof -i :$MCP_PORT >/dev/null 2>&1; then
-        log_warning "MCP port $MCP_PORT is already in use"
-        log_info "You may want to stop the existing service or use a different port"
+        log_warning "MCP 端口 $MCP_PORT 已被占用"
+        log_info "您可能需要停止现有服务或使用其他端口"
     else
-        log_success "MCP port $MCP_PORT is available"
+        log_success "MCP 端口 $MCP_PORT 可用"
     fi
 fi
 
 # Only check dashboard port if defined
 if [ ! -z "$DASHBOARD_PORT" ]; then
-    log_info "Checking if dashboard port $DASHBOARD_PORT is available..."
+    log_info "检查仪表板端口 $DASHBOARD_PORT 是否可用..."
     if lsof -i :$DASHBOARD_PORT >/dev/null 2>&1; then
-        log_warning "Dashboard port $DASHBOARD_PORT is already in use"
-        log_info "You may want to stop the existing service or use a different port"
+        log_warning "仪表板端口 $DASHBOARD_PORT 已被占用"
+        log_info "您可能需要停止现有服务或使用其他端口"
     else
-        log_success "Dashboard port $DASHBOARD_PORT is available"
+        log_success "仪表板端口 $DASHBOARD_PORT 可用"
     fi
 fi
 
 # Function to start MCP server in background
 start_mcp_server() {
-    log_info "Starting MCP SSE server on port $MCP_PORT..."
+    log_info "正在端口 $MCP_PORT 上启动 MCP SSE 服务器..."
     uvicorn src.mcp.simple_sse_server:app --port $MCP_PORT --host 0.0.0.0 2>&1 | sed 's/^/[MCP] /' &
     MCP_PID=$!
-    log_success "MCP SSE server started on port $MCP_PORT (PID: $MCP_PID)"
+    log_success "MCP SSE 服务器已在端口 $MCP_PORT 上启动 (PID: $MCP_PID)"
 }
 
 # Function to start dashboard in background
 start_dashboard() {
     # Check if Node.js is installed
     if ! command -v node >/dev/null 2>&1; then
-        log_warning "Node.js not found. Dashboard requires Node.js 18+ to run."
-        log_info "Please install Node.js from https://nodejs.org/"
+        log_warning "未找到 Node.js。仪表板需要 Node.js 18+ 才能运行。"
+        log_info "请从 https://nodejs.org/ 安装 Node.js"
         return
     fi
     
@@ -244,46 +244,46 @@ start_dashboard() {
     NODE_VERSION=$(node --version | cut -d'v' -f2)
     NODE_MAJOR=$(echo $NODE_VERSION | cut -d'.' -f1)
     if [ "$NODE_MAJOR" -lt 18 ]; then
-        log_warning "Node.js 18+ required for dashboard. Found: v$NODE_VERSION"
+        log_warning "仪表板需要 Node.js 18+。当前版本: v$NODE_VERSION"
         return
     fi
     
     if [ -d "dashboard" ]; then
-        log_info "Starting dashboard on port $DASHBOARD_PORT..."
+        log_info "正在端口 $DASHBOARD_PORT 上启动仪表板..."
         cd dashboard
         
         # Check if node_modules exists
         if [ ! -d "node_modules" ]; then
-            log_warning "Dashboard dependencies not installed. Installing..."
+            log_warning "仪表板依赖项未安装。正在安装..."
             npm install >/dev/null 2>&1
-            log_success "Dashboard dependencies installed"
+            log_success "仪表板依赖项已安装"
         fi
         
         # Start the dashboard with the configured port
         npx next dev --port $DASHBOARD_PORT --turbopack 2>&1 | sed 's/^/[DASHBOARD] /' &
         DASHBOARD_PID=$!
         cd ..
-        log_success "Dashboard started on port $DASHBOARD_PORT (PID: $DASHBOARD_PID)"
+        log_success "仪表板已在端口 $DASHBOARD_PORT 上启动 (PID: $DASHBOARD_PID)"
     else
-        log_warning "Dashboard directory not found. Skipping dashboard startup."
-        log_info "To install the dashboard, run: npx create-next-app@latest dashboard"
+        log_warning "未找到仪表板目录。跳过仪表板启动。"
+        log_info "要安装仪表板，请运行: npx create-next-app@latest dashboard"
     fi
 }
 
 # Function to cleanup on exit
 cleanup() {
-    log_info "Shutting down..."
+    log_info "正在关闭..."
     if [ ! -z "$MCP_PID" ]; then
         kill $MCP_PID 2>/dev/null || true
-        log_info "MCP server stopped"
+        log_info "MCP 服务器已停止"
     fi
     if [ ! -z "$DASHBOARD_PID" ]; then
         kill $DASHBOARD_PID 2>/dev/null || true
-        log_info "Dashboard stopped"
+        log_info "仪表板已停止"
     fi
     if [ ! -z "$API_PID" ]; then
         kill $API_PID 2>/dev/null || true
-        log_info "API server stopped"
+        log_info "API 服务器已停止"
     fi
     exit 0
 }
@@ -292,43 +292,43 @@ cleanup() {
 trap cleanup INT TERM
 
 # Start the servers
-log_info "All checks passed! Starting Headless PM servers..."
+log_info "所有检查已通过！正在启动 Headless PM 服务器..."
 echo -e "${GREEN}"
-echo "🌟 Starting services..."
+echo "🌟 正在启动服务..."
 if [ ! -z "$SERVICE_PORT" ] || [ "$PORT" = "6969" ]; then
-    echo "📚 API Documentation: http://localhost:$PORT/api/v1/docs"
+    echo "📚 API 文档: http://localhost:$PORT/api/v1/docs"
 fi
 if [ ! -z "$MCP_PORT" ]; then
-    echo "🔌 MCP HTTP Server: http://localhost:$MCP_PORT"
+    echo "🔌 MCP HTTP 服务器: http://localhost:$MCP_PORT"
 fi
 if [ ! -z "$DASHBOARD_PORT" ]; then
-    echo "🖥️  Web Dashboard: http://localhost:$DASHBOARD_PORT"
+    echo "🖥️  Web 仪表板: http://localhost:$DASHBOARD_PORT"
 fi
-echo "📊 CLI Dashboard: python -m src.cli.main dashboard"
-echo "🛑 Stop servers: Ctrl+C"
+echo "📊 CLI 仪表板: python -m src.cli.main dashboard"
+echo "🛑 停止服务器: Ctrl+C"
 echo -e "${NC}"
 
 # Start MCP server in background (only if MCP_PORT is defined)
 if [ ! -z "$MCP_PORT" ]; then
     start_mcp_server
 else
-    log_info "MCP_PORT not defined in .env, skipping MCP server startup"
+    log_info "MCP_PORT 未在 .env 中定义，跳过 MCP 服务器启动"
 fi
 
 # Start dashboard in background (only if DASHBOARD_PORT is defined)
 if [ ! -z "$DASHBOARD_PORT" ]; then
     start_dashboard
 else
-    log_info "DASHBOARD_PORT not defined in .env, skipping dashboard startup"
+    log_info "DASHBOARD_PORT 未在 .env 中定义，跳过仪表板启动"
 fi
 
 # Start API server (only if SERVICE_PORT is defined or use default)
 if [ ! -z "$SERVICE_PORT" ] || [ "$PORT" = "6969" ]; then
-    log_info "Starting API server on port $PORT..."
+    log_info "正在端口 $PORT 上启动 API 服务器..."
     uvicorn src.main:app --reload --port $PORT --host 0.0.0.0 &
     API_PID=$!
 else
-    log_info "SERVICE_PORT not defined in .env, skipping API server startup"
+    log_info "SERVICE_PORT 未在 .env 中定义，跳过 API 服务器启动"
 fi
 
 # Wait for all processes

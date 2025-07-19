@@ -12,8 +12,8 @@ from src.api.dependencies import verify_api_key
 router = APIRouter(prefix="/api/v1/services", tags=["Services"], dependencies=[Depends(verify_api_key)])
 
 @router.post("/register", response_model=ServiceResponse,
-    summary="Register or update service",
-    description="Register a new service or update existing service status")
+    summary="注册或更新服务",
+    description="注册新服务或更新现有服务状态")
 def register_service(
     request: ServiceRegisterRequest,
     agent_id: str = Query(..., description="Agent ID of the service owner"),
@@ -52,15 +52,15 @@ def register_service(
     return service
 
 @router.get("", response_model=List[ServiceResponse],
-    summary="List all services",
-    description="Get list of all registered services")
+    summary="列出所有服务",
+    description="获取所有已注册服务的列表")
 def list_services(db: Session = Depends(get_session)):
     services = db.exec(select(Service).order_by(Service.service_name)).all()
     return services
 
 @router.post("/{service_name}/heartbeat", response_model=ServiceResponse,
-    summary="Send heartbeat",
-    description="Update service heartbeat to keep it alive")
+    summary="发送心跳",
+    description="更新服务心跳以保持其活跃")
 def service_heartbeat(
     service_name: str,
     agent_id: str = Query(..., description="Agent ID sending the heartbeat"),
@@ -71,11 +71,11 @@ def service_heartbeat(
     ).first()
     
     if not service:
-        raise HTTPException(status_code=404, detail="Service not found")
+        raise HTTPException(status_code=404, detail="服务未找到")
     
     # Verify ownership
     if service.owner_agent_id != agent_id:
-        raise HTTPException(status_code=403, detail="Only service owner can send heartbeat")
+        raise HTTPException(status_code=403, detail="只有服务所有者可以发送心跳")
     
     # Update heartbeat
     service.last_heartbeat = datetime.utcnow()
@@ -92,8 +92,8 @@ def service_heartbeat(
     return service
 
 @router.delete("/{service_name}",
-    summary="Unregister service",
-    description="Remove a service from the registry")
+    summary="注销服务",
+    description="从注册表中移除服务")
 def unregister_service(
     service_name: str,
     agent_id: str = Query(..., description="Agent ID requesting deletion"),
@@ -104,13 +104,13 @@ def unregister_service(
     ).first()
     
     if not service:
-        raise HTTPException(status_code=404, detail="Service not found")
+        raise HTTPException(status_code=404, detail="服务未找到")
     
     # Verify ownership
     if service.owner_agent_id != agent_id:
-        raise HTTPException(status_code=403, detail="Only service owner can unregister service")
+        raise HTTPException(status_code=403, detail="只有服务所有者可以注销服务")
     
     db.delete(service)
     db.commit()
     
-    return {"message": f"Service {service_name} unregistered successfully"}
+    return {"message": f"服务 {service_name} 注销成功"}

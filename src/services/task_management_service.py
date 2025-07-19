@@ -31,12 +31,12 @@ def create_task(request: TaskCreateRequest, agent_id: str, db: Session) -> TaskR
     # Find creator agent
     creator = db.exec(select(Agent).where(Agent.agent_id == agent_id)).first()
     if not creator:
-        raise HTTPException(status_code=404, detail="Creator agent not found")
+        raise HTTPException(status_code=404, detail="创建者代理未找到")
     
     # Verify feature exists
     feature = db.get(Feature, request.feature_id)
     if not feature:
-        raise HTTPException(status_code=404, detail="Feature not found")
+        raise HTTPException(status_code=404, detail="功能未找到")
     
     # Create task
     task = Task(
@@ -59,7 +59,7 @@ def create_task(request: TaskCreateRequest, agent_id: str, db: Session) -> TaskR
         old_status=TaskStatus.CREATED,
         new_status=TaskStatus.CREATED,
         changed_by=creator.agent_id,
-        notes="Task created"
+        notes="任务已创建"
     )
     db.add(changelog)
     db.commit()
@@ -148,14 +148,14 @@ def lock_task(task_id: int, agent_id: str, db: Session) -> TaskResponse:
     if not task:
         raise HTTPException(
             status_code=404, 
-            detail=f"Task with ID {task_id} not found. Please verify the task ID exists."
+            detail=f"ID为 {task_id} 的任务未找到。请验证任务ID是否存在。"
         )
     
     # Check if already locked
     if task.locked_by_id:
         raise HTTPException(
             status_code=409, 
-            detail=f"Task {task_id} is already locked by another agent. The task must be unlocked before you can lock it."
+            detail=f"任务 {task_id} 已被其他代理锁定。您必须先解锁该任务才能锁定它。"
         )
     
     # Get agent
@@ -163,7 +163,7 @@ def lock_task(task_id: int, agent_id: str, db: Session) -> TaskResponse:
     if not agent:
         raise HTTPException(
             status_code=404, 
-            detail=f"Agent '{agent_id}' not found. Please ensure the agent is registered using POST /api/v1/register before attempting this operation."
+            detail=f"代理 '{agent_id}' 未找到。请确保在执行此操作前使用 POST /api/v1/register 注册代理。"
         )
     
     # Lock the task
@@ -219,7 +219,7 @@ def update_task_status(
     if not task:
         raise HTTPException(
             status_code=404, 
-            detail=f"Task with ID {task_id} not found. Please verify the task ID exists."
+            detail=f"ID为 {task_id} 的任务未找到。请验证任务ID是否存在。"
         )
     
     # Get agent
@@ -227,7 +227,7 @@ def update_task_status(
     if not agent:
         raise HTTPException(
             status_code=404, 
-            detail=f"Agent '{agent_id}' not found. Please ensure the agent is registered using POST /api/v1/register before attempting this operation."
+            detail=f"代理 '{agent_id}' 未找到。请确保在执行此操作前使用 POST /api/v1/register 注册代理。"
         )
     
     # Store old status
@@ -300,7 +300,7 @@ def update_task_status(
         workflow_status=workflow_status,
         task_completed=task_id,
         auto_continue=auto_continue,
-        continuation_prompt="Continue with the next task without waiting for confirmation" if next_task else "No more tasks available",
+        continuation_prompt="继续下一个任务而无需等待确认" if next_task else "没有更多可用任务",
         session_momentum=session_momentum
     )
 
@@ -326,7 +326,7 @@ def add_task_comment(task_id: int, request: TaskCommentRequest, agent_id: str, d
     if not task:
         raise HTTPException(
             status_code=404, 
-            detail=f"Task with ID {task_id} not found. Please verify the task ID exists."
+            detail=f"ID为 {task_id} 的任务未找到。请验证任务ID是否存在。"
         )
     
     # Add comment to notes
@@ -342,7 +342,7 @@ def add_task_comment(task_id: int, request: TaskCommentRequest, agent_id: str, d
     db.add(task)
     db.commit()
     
-    return {"message": "Comment added successfully"}
+    return {"message": "评论添加成功"}
 
 
 def delete_task(task_id: int, agent_id: str, db: Session) -> dict:
@@ -367,12 +367,12 @@ def delete_task(task_id: int, agent_id: str, db: Session) -> dict:
     
     task = db.exec(select(Task).where(Task.id == task_id)).first()
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail="任务未找到")
     
     db.delete(task)
     db.commit()
     
-    return {"message": f"Task {task_id} deleted successfully"}
+    return {"message": f"任务 {task_id} 删除成功"}
 
 
 def get_recent_changelog(limit: int, db: Session) -> List[Changelog]:

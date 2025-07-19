@@ -1,286 +1,286 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+此文件为Claude Code（claude.ai/code）在处理此仓库代码时提供指导。
 
-## Environment Setup
+## 环境设置
 
-### Automated Setup (Recommended)
+### 自动设置（推荐）
 ```bash
-# Run universal setup script - handles platform-specific requirements
+# 运行通用设置脚本 - 处理特定平台的要求
 ./setup/universal_setup.sh
 
-# This will:
-# - Detect your architecture (ARM64 for native Mac, x86_64 for Claude Code)
-# - Create the appropriate virtual environment (venv or claude_venv)
-# - Install correct package versions for your platform
-# - Create .env from env-example if needed
+# 这将：
+# - 检测您的架构（ARM64用于原生Mac，x86_64用于Claude Code）
+# - 创建适当的虚拟环境（venv或claude_venv）
+# - 为您的平台安装正确的包版本
+# - 如需要，从env-example创建.env
 ```
 
-### Manual Setup (if needed)
+### 手动设置（如需要）
 ```bash
-# For Claude Code (x86_64), use claude_venv:
+# 对于Claude Code（x86_64），使用claude_venv：
 python -m venv claude_venv
 source claude_venv/bin/activate
 pip install pydantic==2.11.7 pydantic-core==2.33.2
 pip install -r setup/requirements.txt
 
-# For native Mac (ARM64), use standard venv:
+# 对于原生Mac（ARM64），使用标准venv：
 python -m venv venv
 source venv/bin/activate
 pip install -r setup/requirements.txt
 
-# Configure environment
+# 配置环境
 cp env-example .env
-# Edit .env with API keys and database configuration
+# 使用API密钥和数据库配置编辑.env
 
-# Initialize database
+# 初始化数据库
 python -m src.cli.main init
-python -m src.cli.main seed  # Optional: add sample data
+python -m src.cli.main seed  # 可选：添加示例数据
 ```
 
-### Running the Application
+### 运行应用程序
 
-#### Quick Start (Recommended)
+#### 快速启动（推荐）
 ```bash
-# Activate your virtual environment first
-source venv/bin/activate  # or source claude_venv/bin/activate
+# 首先激活您的虚拟环境
+source venv/bin/activate  # 或 source claude_venv/bin/activate
 
-# Use the automated start script (checks environment, DB, starts server)
+# 使用自动启动脚本（检查环境、数据库、启动服务器）
 ./start.sh
 ```
 
-#### Manual Start
+#### 手动启动
 ```bash
-# Run API server
+# 运行API服务器
 bash start.sh
 ```
 
-The `start.sh` script automatically:
-- ✅ Validates Python 3.11+ requirement  
-- ✅ Checks required packages are installed
-- ✅ Creates .env from env-example if needed
-- ✅ Tests database connection
-- ✅ Initializes database if needed
-- ✅ Checks port availability
-- ✅ Starts server with proper configuration
-- ✅ Starts only services with defined ports in .env
+`start.sh`脚本自动：
+- ✅ 验证Python 3.11+要求  
+- ✅ 检查必需的包是否已安装
+- ✅ 如需要，从env-example创建.env
+- ✅ 测试数据库连接
+- ✅ 如需要，初始化数据库
+- ✅ 检查端口可用性
+- ✅ 使用正确配置启动服务器
+- ✅ 仅启动在.env中定义了端口的服务
 
-**Service Port Configuration:**
-- Services are only started if their port is defined in `.env`
-- To skip a service, remove or comment out its port variable:
-  - `SERVICE_PORT` - API server (default: 6969)
-  - `MCP_PORT` - MCP server (default: 6968) 
-  - `DASHBOARD_PORT` - Web dashboard (default: 3001)
+**服务端口配置：**
+- 仅当在`.env`中定义了端口时才启动服务
+- 要跳过某个服务，请删除或注释掉其端口变量：
+  - `SERVICE_PORT` - API服务器（默认：6969）
+  - `MCP_PORT` - MCP服务器（默认：6968） 
+  - `DASHBOARD_PORT` - Web仪表板（默认：3001）
 
-**Note**: Activate your virtual environment before running the start script.
+**注意**：运行启动脚本前请激活您的虚拟环境。
 
-## Testing
+## 测试
 
-### Running Tests
+### 运行测试
 ```bash
-# IMPORTANT: Use the appropriate virtual environment for your platform
-# For Claude Code (x86_64):
+# 重要：为您的平台使用适当的虚拟环境
+# 对于Claude Code（x86_64）：
 source claude_venv/bin/activate
 
-# For native Mac (ARM64):
+# 对于原生Mac（ARM64）：
 source venv/bin/activate
 
-# Run all tests with coverage
+# 带覆盖率运行所有测试
 python -m pytest --cov=src --cov-report=term-missing
 
-# Run specific test files
+# 运行特定测试文件
 python -m pytest tests/test_api.py -v
 python -m pytest tests/test_models.py -v
 
-# Run tests without coverage (faster)
+# 不带覆盖率运行测试（更快）
 python -m pytest -q
 
-# Run specific test patterns
+# 运行特定测试模式
 python -m pytest -k "test_name_pattern"
 ```
 
-### Test Coverage Status
-- **Current Tests**: Client integration tests
-- **Test Location**: `tests/test_headless_pm_client.py`
-- **Additional Testing**: Comprehensive test suite planned
+### 测试覆盖状态
+- **当前测试**：客户端集成测试
+- **测试位置**：`tests/test_headless_pm_client.py`
+- **额外测试**：计划的全面测试套件
 
-### Test Architecture Notes
-- API tests use temporary file-based SQLite databases (not in-memory) to avoid connection issues
-- All models, enums, and services have comprehensive test coverage
-- Tests include document creation, mention detection, service registry, and task lifecycle
+### 测试架构说明
+- API测试使用临时的基于文件的SQLite数据库（非内存）以避免连接问题
+- 所有模型、枚举和服务都有全面的测试覆盖
+- 测试包括文档创建、提及检测、服务注册表和任务生命周期
 
-## Architecture Overview
+## 架构概述
 
-Headless PM is a REST API for LLM agent task coordination with document-based communication. Key architectural decisions:
+Headless PM是一个用于LLM代理任务协调的REST API，具有基于文档的通信。关键架构决策：
 
-1. **Document-Based Communication**: Agents communicate via documents with @mention support
-2. **Service Registry**: Track running services with heartbeat monitoring
-3. **Git Workflow Integration**: Major tasks use feature branches with PRs, minor tasks commit directly to main
-4. **Changes Polling**: Efficient polling endpoint for agents to get updates since last check
-5. **Role-Based System**: Five roles (frontend_dev, backend_dev, qa, architect, pm) with multiple agents per role
-6. **Task Complexity**: Major/minor classification determines Git workflow (PR vs direct commit)
-7. **Comprehensive Testing**: 78 tests with 71% coverage including full API testing
+1. **基于文档的通信**：代理通过带@提及支持的文档进行通信
+2. **服务注册表**：通过心跳监控跟踪运行中的服务
+3. **Git工作流集成**：主要任务使用功能分支和PR，次要任务直接提交到主分支
+4. **变更轮询**：高效的轮询端点，代理可获取上次检查以来的更新
+5. **基于角色的系统**：五个角色（frontend_dev、backend_dev、qa、architect、pm），每个角色可有多个代理
+6. **任务复杂度**：主要/次要分类决定Git工作流（PR vs 直接提交）
+7. **全面测试**：78个测试，71%覆盖率，包括完整的API测试
 
-### Enhanced Features
-- **Epic/Feature/Task Hierarchy**: Three-level project organization
-- **Documents Table**: Agent communication with mention detection
-- **Service Registry**: Track microservices with heartbeat monitoring and ping URLs
-- **Mentions System**: @username notifications across documents and tasks
-- **Changes API**: Polling endpoint returning changes since timestamp
-- **Task Complexity**: Major/minor enum driving branching strategies
-- **Connection Types**: Distinguish between MCP and client connections
-- **Task Comments**: Collaborative discussion on tasks with @mentions
-- **Python Client Helper**: Complete CLI interface (`headless_pm_client.py`)
-- **MCP Server**: Natural language interface for Claude Code
-- **Database Migrations**: Schema evolution support
-- **Web Dashboard**: Real-time project overview with analytics and monitoring
-- **Port-based Service Control**: Services only start if their port is defined in .env
+### 增强功能
+- **史诗/功能/任务层次结构**：三级项目组织
+- **文档表**：带提及检测的代理通信
+- **服务注册表**：通过心跳监控和ping URL跟踪微服务
+- **提及系统**：跨文档和任务的@用户名通知
+- **变更API**：轮询端点返回自某时间戳以来的变更
+- **任务复杂度**：主要/次要枚举驱动分支策略
+- **连接类型**：区分MCP和客户端连接
+- **任务评论**：带@提及的任务协作讨论
+- **Python客户端助手**：完整的CLI界面（`headless_pm_client.py`）
+- **MCP服务器**：Claude Code的自然语言界面
+- **数据库迁移**：模式演进支持
+- **Web仪表板**：带分析和监控的实时项目概览
+- **基于端口的服务控制**：仅在.env中定义了端口时才启动服务
 
-## Project Structure
+## 项目结构
 
 ```
 headless-pm/
-├── src/                    # Source code
-│   ├── api/               # FastAPI routes
-│   ├── models/            # SQLModel database models
-│   ├── services/          # Business logic
-│   ├── cli/               # CLI commands
-│   ├── mcp/               # MCP server implementation
-│   └── main.py            # FastAPI app entry point
-├── dashboard/             # Next.js web dashboard
-│   ├── src/               # Dashboard source code
-│   └── package.json       # Dashboard dependencies
-├── tests/                 # Test files
-├── migrations/            # Database migration scripts
-├── agent_instructions/    # Per-role markdown instructions
-├── agents/                # Agent tools and installers
-│   └── claude/            # Claude Code specific tools
-├── setup/                 # Installation and setup scripts
-├── docs/                  # Project documentation
-│   └── images/            # Dashboard screenshots
-└── headless_pm_client.py  # Python CLI client
+├── src/                    # 源代码
+│   ├── api/               # FastAPI路由
+│   ├── models/            # SQLModel数据库模型
+│   ├── services/          # 业务逻辑
+│   ├── cli/               # CLI命令
+│   ├── mcp/               # MCP服务器实现
+│   └── main.py            # FastAPI应用入口点
+├── dashboard/             # Next.js Web仪表板
+│   ├── src/               # 仪表板源代码
+│   └── package.json       # 仪表板依赖项
+├── tests/                 # 测试文件
+├── migrations/            # 数据库迁移脚本
+├── agent_instructions/    # 每个角色的markdown说明
+├── agents/                # 代理工具和安装程序
+│   └── claude/            # Claude Code专用工具
+├── setup/                 # 安装和设置脚本
+├── docs/                  # 项目文档
+│   └── images/            # 仪表板截图
+└── headless_pm_client.py  # Python CLI客户端
 ```
 
-## Key API Endpoints
+## 关键API端点
 
-### Core Task Management
-- `POST /api/v1/register` - Register agent with role/skill level and connection type
-- `GET /api/v1/context` - Get project context and paths
-- `DELETE /api/v1/agents/{agent_id}` - Delete agent (PM only)
+### 核心任务管理
+- `POST /api/v1/register` - 注册代理，包含角色/技能级别和连接类型
+- `GET /api/v1/context` - 获取项目上下文和路径
+- `DELETE /api/v1/agents/{agent_id}` - 删除代理（仅PM）
 
-### Epic/Feature/Task Endpoints
-- `POST /api/v1/epics` - Create epic (PM/Architect only)
-- `GET /api/v1/epics` - List epics with progress tracking
-- `DELETE /api/v1/epics/{id}` - Delete epic (PM only)
-- `POST /api/v1/features` - Create feature under epic
-- `GET /api/v1/features/{epic_id}` - List features for epic
-- `DELETE /api/v1/features/{id}` - Delete feature
-- `POST /api/v1/tasks/create` - Create new task with complexity (major/minor)
-- `GET /api/v1/tasks/next` - Get next available task for role
-- `POST /api/v1/tasks/{id}/lock` - Lock task to prevent duplicate work
-- `PUT /api/v1/tasks/{id}/status` - Update task status
-- `POST /api/v1/tasks/{id}/comment` - Add comment with @mention support
+### 史诗/功能/任务端点
+- `POST /api/v1/epics` - 创建史诗（仅PM/架构师）
+- `GET /api/v1/epics` - 列出带进度跟踪的史诗
+- `DELETE /api/v1/epics/{id}` - 删除史诗（仅PM）
+- `POST /api/v1/features` - 在史诗下创建功能
+- `GET /api/v1/features/{epic_id}` - 列出史诗的功能
+- `DELETE /api/v1/features/{id}` - 删除功能
+- `POST /api/v1/tasks/create` - 创建新任务，带复杂度（主要/次要）
+- `GET /api/v1/tasks/next` - 获取角色的下一个可用任务
+- `POST /api/v1/tasks/{id}/lock` - 锁定任务以防止重复工作
+- `PUT /api/v1/tasks/{id}/status` - 更新任务状态
+- `POST /api/v1/tasks/{id}/comment` - 添加带@提及支持的评论
 
-### Document Communication
-- `POST /api/v1/documents` - Create document with auto @mention detection
-- `GET /api/v1/documents` - List documents with filtering
-- `GET /api/v1/mentions` - Get mentions for an agent
+### 文档通信
+- `POST /api/v1/documents` - 创建带自动@提及检测的文档
+- `GET /api/v1/documents` - 列出带过滤的文档
+- `GET /api/v1/mentions` - 获取代理的提及
 
-### Service Registry
-- `POST /api/v1/services/register` - Register a service with optional ping URL
-- `GET /api/v1/services` - List all services with health status
-- `POST /api/v1/services/{name}/heartbeat` - Send service heartbeat
-- `DELETE /api/v1/services/{name}` - Unregister service
+### 服务注册表
+- `POST /api/v1/services/register` - 注册服务，带可选ping URL
+- `GET /api/v1/services` - 列出所有服务及健康状态
+- `POST /api/v1/services/{name}/heartbeat` - 发送服务心跳
+- `DELETE /api/v1/services/{name}` - 取消注册服务
 
-### Changes & Updates
-- `GET /api/v1/changes` - Poll for changes since timestamp
-- `GET /api/v1/changelog` - Get recent task status changes
+### 变更与更新
+- `GET /api/v1/changes` - 轮询自某时间戳以来的变更
+- `GET /api/v1/changelog` - 获取最近的任务状态变更
 
-## Technology Stack
+## 技术栈
 
-- **FastAPI** - REST API framework
-- **SQLModel** - ORM combining SQLAlchemy + Pydantic
-- **Pydantic** - Data validation
-- **SQLite/MySQL** - Database options
-- **Python 3.11+** - Runtime requirement
+- **FastAPI** - REST API框架
+- **SQLModel** - 结合SQLAlchemy + Pydantic的ORM
+- **Pydantic** - 数据验证
+- **SQLite/MySQL** - 数据库选项
+- **Python 3.11+** - 运行时要求
 
-## Development Notes
+## 开发笔记
 
-### Implementation Status
-- ✅ **Fully Implemented**: Complete REST API with all endpoints
-- ✅ **Database Models**: SQLModel with proper relationships
-- ✅ **CLI Interface**: Full command-line management tools
-- ✅ **Web Dashboard**: Next.js dashboard with real-time updates
-- ✅ **Testing**: 78 tests with 71% coverage
-- ✅ **Documentation**: Agent instructions and workflow guides
+### 实现状态
+- ✅ **完全实现**：完整的REST API，包含所有端点
+- ✅ **数据库模型**：SQLModel，具有适当的关系
+- ✅ **CLI界面**：完整的命令行管理工具
+- ✅ **Web仪表板**：Next.js仪表板，实时更新
+- ✅ **测试**：78个测试，71%覆盖率
+- ✅ **文档**：代理说明和工作流指南
 
-### Key Implementation Details
-- **Task Organization**: Epic → Feature → Task hierarchy
-- **Task Difficulty Levels**: junior, senior, principal
-- **Task Complexity**: major (requires PR), minor (direct commit)
-- **Agent Communication**: Via documents with @mention detection
-- **Agent Types**: Client connections and MCP connections
-- **Service Monitoring**: Heartbeat-based health tracking with optional ping URLs
-- **Change Detection**: Efficient polling since timestamp
-- **Git Integration**: Automated workflow based on task complexity
-- **Database**: SQLModel for type safety, supports SQLite and MySQL
-- **API Validation**: Pydantic models for all request/response data
-- **MCP Transport**: Multiple protocols (HTTP, SSE, WebSocket, STDIO)
-- **Token Tracking**: Usage statistics for MCP sessions
+### 关键实现细节
+- **任务组织**：史诗 → 功能 → 任务层次结构
+- **任务难度级别**：初级、高级、首席
+- **任务复杂度**：主要（需要PR）、次要（直接提交）
+- **代理通信**：通过带@提及检测的文档
+- **代理类型**：客户端连接和MCP连接
+- **服务监控**：基于心跳的健康跟踪，带可选ping URL
+- **变更检测**：自时间戳以来的高效轮询
+- **Git集成**：基于任务复杂度的自动化工作流
+- **数据库**：SQLModel用于类型安全，支持SQLite和MySQL
+- **API验证**：所有请求/响应数据使用Pydantic模型
+- **MCP传输**：多种协议（HTTP、SSE、WebSocket、STDIO）
+- **令牌跟踪**：MCP会话的使用统计
 
-### Testing Environment
-- Use `claude_venv` for all testing to ensure compatibility
-- API tests use temporary file-based SQLite databases
-- Run `python -m pytest tests/` for running tests
-- Client integration tests implemented in `test_headless_pm_client.py`
+### 测试环境
+- 使用`claude_venv`进行所有测试以确保兼容性
+- API测试使用临时的基于文件的SQLite数据库
+- 运行`python -m pytest tests/`来运行测试
+- 客户端集成测试在`test_headless_pm_client.py`中实现
 
-## Python Client Helper
+## Python客户端助手
 
-The `headless_pm_client.py` provides a complete CLI interface to the API:
+`headless_pm_client.py`为API提供完整的CLI界面：
 
-### Basic Usage
+### 基本用法
 ```bash
-# Register an agent
+# 注册代理
 ./headless_pm_client.py register --agent-id "dev_001" --role "backend_dev" --level "senior"
 
-# Work with epics/features/tasks
-./headless_pm_client.py epics create --name "Authentication" --description "User auth system"
+# 使用史诗/功能/任务
+./headless_pm_client.py epics create --name "认证" --description "用户认证系统"
 ./headless_pm_client.py tasks next --role backend_dev --level senior
 ./headless_pm_client.py tasks lock 123 --agent-id "dev_001"
 ./headless_pm_client.py tasks status 123 --status "dev_done" --agent-id "dev_001"
 
-# Communicate with team
-./headless_pm_client.py documents create --type "update" --title "Progress" \
-  --content "Completed login API @qa_001 please test" --author-id "dev_001"
+# 与团队沟通
+./headless_pm_client.py documents create --type "update" --title "进度" \
+  --content "完成登录API @qa_001 请测试" --author-id "dev_001"
   
-# Check for updates
+# 检查更新
 ./headless_pm_client.py mentions --agent-id "dev_001"
 ./headless_pm_client.py changes --since 1736359200 --agent-id "dev_001"
 ```
 
-### Client Features
-- Automatic `.env` file loading for API keys
-- Comprehensive help with `--help` flag
-- Support for all API endpoints
-- Embedded agent instructions
-- Multiple API key sources (checks in priority order)
+### 客户端功能
+- 自动加载`.env`文件以获取API密钥
+- 使用`--help`标志获取全面帮助
+- 支持所有API端点
+- 嵌入式代理说明
+- 多个API密钥来源（按优先级顺序检查）
 
-## Connection Types
+## 连接类型
 
-Agents can register with two connection types:
+代理可以使用两种连接类型注册：
 
-### CLIENT Connection
-- Default for agents using the API directly
-- Use when registering via `headless_pm_client.py` or direct API calls
-- Example: `./headless_pm_client.py register --agent-id "dev_001" --role "backend_dev"`
+### CLIENT连接
+- 直接使用API的代理的默认选项
+- 通过`headless_pm_client.py`或直接API调用注册时使用
+- 示例：`./headless_pm_client.py register --agent-id "dev_001" --role "backend_dev"`
 
-### MCP Connection  
-- Automatically set when using MCP server
-- Used by Claude Code integration
-- Provides natural language interface
-- Token usage tracking included
+### MCP连接  
+- 使用MCP服务器时自动设置
+- 由Claude Code集成使用
+- 提供自然语言界面
+- 包含令牌使用跟踪
 
-The connection type helps distinguish between different agent interfaces and enables appropriate features for each type.
+连接类型有助于区分不同的代理界面，并为每种类型启用适当的功能。
 
-### Memories
-- 8000 port is for another service entirely, leave that alone!
+### 记忆点
+- 8000端口完全用于另一个服务，不要更改！

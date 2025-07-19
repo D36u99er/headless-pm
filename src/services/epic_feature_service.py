@@ -108,7 +108,7 @@ def create_feature(request: FeatureCreateRequest, agent_id: str, db: Session) ->
     # Verify epic exists
     epic = db.get(Epic, request.epic_id)
     if not epic:
-        raise HTTPException(status_code=404, detail="Epic not found")
+        raise HTTPException(status_code=404, detail="史诗未找到")
     
     # Create feature
     feature = Feature(
@@ -157,12 +157,12 @@ def delete_epic(epic_id: int, agent_id: str, db: Session) -> dict:
     
     epic = db.exec(select(Epic).where(Epic.id == epic_id)).first()
     if not epic:
-        raise HTTPException(status_code=404, detail="Epic not found")
+        raise HTTPException(status_code=404, detail="史诗未找到")
     
     db.delete(epic)
     db.commit()
     
-    return {"message": f"Epic {epic_id} deleted successfully"}
+    return {"message": f"史诗 {epic_id} 删除成功"}
 
 
 def delete_feature(feature_id: int, agent_id: str, db: Session) -> dict:
@@ -185,9 +185,9 @@ def delete_feature(feature_id: int, agent_id: str, db: Session) -> dict:
     
     feature = db.exec(select(Feature).where(Feature.id == feature_id)).first()
     if not feature:
-        raise HTTPException(status_code=404, detail="Feature not found")
+        raise HTTPException(status_code=404, detail="功能未找到")
     
     db.delete(feature)
     db.commit()
     
-    return {"message": f"Feature {feature_id} deleted successfully"}
+    return {"message": f"功能 {feature_id} 删除成功"}
